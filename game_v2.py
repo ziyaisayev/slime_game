@@ -3,7 +3,7 @@ import sys
 
 # === SETUP ===
 pygame.init()
-WIDTH, HEIGHT = 720, 300
+WIDTH, HEIGHT = 800, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Slime Attacks Goblin")
 
@@ -68,8 +68,30 @@ slime_frame_index = 0
 slime_action = "run"
 attack_timer = 0
 
-# === GOBLIN STATE ===
 
+WHITE=(255,255,255)
+Green=(0,150,0)
+dark=(30,30,50)
+
+volume_on=True
+def draw_menu():
+    screen.fill((30,20,40))
+    title=title_font.render("slime vs goblin",True,WHITE)
+    screen.blit(title,(WIDTH//2-title.get_width()//2,150))
+    
+    start_rect=pygame.Rect(WIDTH//2-100,300,200,60)
+    pygame.draw.rect(screen,Green,start_rect)
+    text=button_font.render("Start",True,WHITE)
+    screen.blit(text,(start_rect.centerx-text.get_width()//2,start_rect.centery-text.get_height()//2))
+    
+    volume_text = "VOLUME: ON" if volume_on else "VOLUME: OFF"
+    volume_rect = pygame.Rect(WIDTH // 2 - 100, 400, 200, 50)
+    pygame.draw.rect(screen, (100, 100, 200), volume_rect)
+    text = button_font.render(volume_text, True, WHITE)
+    screen.blit(text, (volume_rect.centerx - text.get_width() // 2, volume_rect.centery - text.get_height() // 2))
+    return start_rect,volume_rect
+
+    
 goblin={
         "x":500,
         "y":HEIGHT // 2, 
@@ -79,10 +101,11 @@ goblin={
         "death_index":0}
 
 # === FONTS ===
-
-font=pygame.font.SysFont(None, 36)
-big_font=pygame.font.SysFont("Arial", 64, bold=True)
-
+game_state="menu"
+big_font=pygame.font.SysFont(None, 36)
+title_font=pygame.font.SysFont("Arial", 72,bold=True)
+button_font=pygame.font.SysFont("Arial", 36)
+font=pygame.font.SysFont("Arial", 36)
 you_win=False 
 you_win_timer=30
 
@@ -90,7 +113,23 @@ you_win_timer=30
 running = True
 while running:
     clock.tick(FPS)
-
+    
+    if game_state=="menu": 
+        start_button,volume_button=draw_menu()
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type== pygame.MOUSEBUTTONDOWN and event.button==1: 
+                if start_button.collidepoint(event.pos): 
+                    game_state="playing"
+                elif volume_button.collidepoint(event.pos): 
+                    volume_on=not volume_on
+                    pygame.mixer.music.set_volume (0.3 if volume_on else 0.0)
+                    
+                    
+        pygame.display.update()
+        continue
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -107,6 +146,16 @@ while running:
                     goblin["alive"] = False
 
     keys = pygame.key.get_pressed()
+    
+    if keys[pygame.K_m]:
+        volume_on=not volume_on
+        if volume_on:
+            pygame.mixer.music.set_volume(0.0)
+            
+        else:
+            pygame.mixer.music.set_volume(0.3)
+        pygame.time.wait(200)
+    
     if attack_timer == 0 and not you_win:
         if keys[pygame.K_LEFT]:
             slime_x -= slime_velocity
